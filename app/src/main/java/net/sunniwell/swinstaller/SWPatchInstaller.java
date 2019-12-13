@@ -2,6 +2,8 @@ package net.sunniwell.swinstaller;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -35,15 +37,34 @@ public class SWPatchInstaller {
 
             //3:生成新的dex的elements
             // list<files> , File optimizeDirectory, List  , Classloader
-            Method makeElements = getMethod(loaderPathList, "makeDexElements", List.class, File.class, List.class, ClassLoader.class);
-            ArrayList<File> patchFiles = new ArrayList<File>();
-            patchFiles.addAll(patchPath);
-            File optimizeFolder = ctx.getDir("dexFolder", Context.MODE_PRIVATE);
-            ArrayList<IOException> inexceptions = new ArrayList<>();
-            Object[] newElements = (Object[]) makeElements.invoke(null, patchFiles, optimizeFolder, inexceptions,loader);
-            if (newElements == null || newElements.length == 0) {
-                Log.d(TAG, "newElements is empty");
-                return;
+            Object[] newElements = null;
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT ||Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP ) {
+                Log.d(TAG, "SDK 19");
+
+                Method makeElements = getMethod(loaderPathList, "makeDexElements", ArrayList.class, File.class, ArrayList.class);
+                ArrayList<File> patchFiles = new ArrayList<File>();
+                patchFiles.addAll(patchPath);
+//                File optimizeFolder = ctx.getDir("dexFolder", Context.MODE_PRIVATE);
+                File opt = ctx.getCacheDir();
+                Log.d(TAG,"opt:"+opt.getAbsolutePath());
+                ArrayList<IOException> inexceptions = new ArrayList<>();
+                newElements = (Object[]) makeElements.invoke(null, patchFiles, opt, inexceptions);
+                if (newElements == null || newElements.length == 0) {
+                    Log.d(TAG, "newElements is empty");
+                    return;
+                }
+            } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.P||Build.VERSION.SDK_INT == Build.VERSION_CODES.N) {
+
+                Method makeElements = getMethod(loaderPathList, "makeDexElements", List.class, File.class, List.class, ClassLoader.class);
+                ArrayList<File> patchFiles = new ArrayList<File>();
+                patchFiles.addAll(patchPath);
+                File optimizeFolder = ctx.getDir("dexFolder", Context.MODE_PRIVATE);
+                ArrayList<IOException> inexceptions = new ArrayList<>();
+                newElements = (Object[]) makeElements.invoke(null, patchFiles, optimizeFolder, inexceptions, loader);
+                if (newElements == null || newElements.length == 0) {
+                    Log.d(TAG, "newElements is empty");
+                    return;
+                }
             }
             Object targetElementArray = Array.newInstance(newElements.getClass().getComponentType(), oldElements.length + newElements.length);
             System.arraycopy(newElements, 0, targetElementArray, 0, newElements.length);
@@ -77,7 +98,7 @@ public class SWPatchInstaller {
                 f.setAccessible(true);
                 return f;
             } catch (NoSuchFieldException e) {
-                e.printStackTrace();
+                Log.d(TAG,"nosuchField "+ aClass.getSimpleName());
             }
             aClass = aClass.getSuperclass();
 

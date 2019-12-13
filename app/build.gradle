@@ -9,7 +9,7 @@ android {
             enabled = true
         }
         applicationId "net.sunniwell.swinstaller"
-        minSdkVersion 28
+        minSdkVersion 19
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"

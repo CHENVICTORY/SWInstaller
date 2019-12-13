@@ -28,8 +28,8 @@ public class SWApplication extends Application {
         super.onCreate();
         Log.d(TAG, "onApplication create currentClassLoader:" + SWApplication.class.getClassLoader());
         File cacheFile = getApplicationContext().getCacheDir();
-        File data = getApplicationContext().getDataDir();
-        Log.d(TAG,"cache:" + cacheFile.getAbsolutePath()+";data:" + data.getAbsolutePath());
+
+        Log.d(TAG,"cache:" + cacheFile.getAbsolutePath()+";data:" );
         List<File> patchFiles = getPatchFile(cacheFile);
         SWPatchInstaller.loadPatch(SWApplication.this,patchFiles);
 
